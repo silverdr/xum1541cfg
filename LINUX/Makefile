@@ -1,7 +1,10 @@
 DFU_SRC= dfu-programmer-0.5.4/src
 
-CFLAGS= -g -I /opt/local/include -I $(DFU_SRC) -Wall
-LDFLAGS= -L/opt/local/lib -lusb
+#CFLAGS= -g -I /opt/local/include -I $(DFU_SRC) -Wall
+#LDFLAGS= -L/opt/local/lib -lusb
+
+CFLAGS += -g -I $(DFU_SRC) -Wall
+LDFLAGS += -lusb
 
 OBJS= main.o util.o
 OBJS+= $(DFU_SRC)/arguments.o $(DFU_SRC)/atmel.o $(DFU_SRC)/commands.o $(DFU_SRC)/dfu.o $(DFU_SRC)/intel_hex.o $(DFU_SRC)/util.o
