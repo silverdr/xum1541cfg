@@ -199,25 +199,25 @@ static int PrintDeviceInfo(char *deviceType)
 	// Find an xum1541 device and verify the firmware matches
 	fprintf(stderr, "finding device...\n");
 	ret = GetXumDevice(deviceType, &usbHandle);
-	if (ret == 0)
+	if (ret != 0)
+	{
+		fprintf(stderr, "error: no xum1541 found\n");
+		return ret;
+	}
+	else
 	{
 		// Download the current version info
 		ret = xum1541_get_model_version(usbHandle, &devModel, &devVersion);
 		if (ret != 0)
 		{
 			fprintf(stderr, "failed to retrieve device version\n");
-			return -1;
+			return ret;
 		}
 
 		printf("xum1541 device, model %d firmware version %d\n", devModel, devVersion);
-		return 0;
-	}
-	else
-	{
-		fprintf(stderr, "error: no xum1541 found\n");
-		return -1;
 	}
 
+	return 0;
 }
 
 // Set the serial so that multiple xum1541 devices can be addressed.
@@ -243,12 +243,14 @@ static int ParseFirmwareFile(char *firmwareFile, int *fileModel, int *fileVersio
 		fprintf(stderr, "error: not a valid firmware file\n");
 		return ret;
 	}
+
 	ret = GetFileVersion(buf, bufSize, fileModel, fileVersion);
 	if (ret != 0)
 	{
 		fprintf(stderr, "error: valid firmware but can't find xum1541 version in it\n");
 		return ret;
 	}
+
 	free(buf);
 	return 0;
 }

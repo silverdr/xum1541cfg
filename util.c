@@ -88,6 +88,7 @@ void verbose_print(char *msg, ...)
 	{
 		return;
 	}
+
 	va_start(args, msg);
 	vfprintf(stderr, msg, args);
 	va_end(args);
@@ -123,7 +124,6 @@ typedef int (*DeviceValidateFn_t)(struct usb_device *dev, void *arg);
 // XXX need to reinit each time
 static int leastSerial = MAX_ALLOWED_XUM1541_SERIALNUM + 1;
 
-
 static int xum1541_validate_device(struct usb_device *dev, void *arg)
 {
 	static char xumProduct[] = "xum1541"; // Start of USB product string id
@@ -140,7 +140,7 @@ static int xum1541_validate_device(struct usb_device *dev, void *arg)
 		return USBDEV_IGNORE;
 	}
 
-    verbose_print("    found xu/xum1541 version %04x, device %s\n", dev->descriptor.bcdDevice, dev->filename);
+	verbose_print("    found xu/xum1541 version %04x, device %s\n", dev->descriptor.bcdDevice, dev->filename);
 	if ((handle = usb_open(dev)) == NULL)
 	{
 		fprintf(stderr, "error: Cannot open USB device: %s\n", usb_strerror());
@@ -258,6 +258,7 @@ static int xum1541_enumerate(usb_dev_handle **usbHandle, DeviceValidateFn_t vali
 		fprintf(stderr, "error: Cannot reopen USB device: %s\n", usb_strerror());
 		return -1;
 	}
+
 	return 0;
 }
 
@@ -289,17 +290,20 @@ usb_dev_handle * xum1541_find_device(int PortNumber, char *devNameBuf, int nameB
 	{
 		return NULL;
 	}
+
 	dev = usb_device(usbHandle);
 	if (!dev)
 	{
 		return NULL;
 	}
+
 	len = usbGetStringAscii(usbHandle, dev->descriptor.iProduct, 0x0409, devNameBuf, nameBufSize - 1);
 	if (len < 0)
 	{
 		xum1541_cleanup(&usbHandle, "error: cannot query product name: %s\n", usb_strerror());
 		return NULL;
 	}
+
 	devNameBuf[len] = '\0';
 
 #if 0
