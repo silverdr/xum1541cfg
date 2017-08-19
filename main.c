@@ -647,5 +647,6 @@ error:
 #ifdef HAVE_LIBUSB_1_0
 	libusb_exit(usbContext);
 #endif
+
 	return retval;
 }
