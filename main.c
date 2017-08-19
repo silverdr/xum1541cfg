@@ -62,7 +62,7 @@ static struct XumDevice validDeviceTypes[] = {
 
 static int RunUpdate(dfu_device_t *devHandle, char *firmwareFile, char *deviceType, int forceFlag);
 static int PrintFirmwareInfo(char *firmwareFile);
-
+static int PrintDeviceInfo(char *deviceType);
 static int ParseFirmwareFile(char *firmwareFile, int *fileModel, int *fileVersion);
 static int LoadIhex(char *firmwareFile, int16_t **buf, int *bufSize);
 static int GetFileVersion(int16_t *buf, int bufSize, int *modelNum, int *versionNum);
@@ -128,9 +128,12 @@ static int RunUpdate(dfu_device_t *devHandle, char *firmwareFile, char *deviceTy
 			}
 			fprintf(stderr, "warning: version mismatch but proceeding to update anyway\n");
 		}
+
 		ret = SetDFUMode(usbHandle);
 		if (ret != 0)
+		{
 			return ret;
+		}
 	}
 	else
 	{
@@ -186,6 +189,35 @@ static int PrintFirmwareInfo(char *firmwareFile)
 	// XXX improve this to print model string from int
 	printf("xum1541 firmware, model %d version %d\n", fileModel, fileVersion);
 	return 0;
+}
+
+static int PrintDeviceInfo(char *deviceType)
+{
+	usb_dev_handle *usbHandle;
+	int devModel, devVersion, ret;
+
+	// Find an xum1541 device and verify the firmware matches
+	fprintf(stderr, "finding device...\n");
+	ret = GetXumDevice(deviceType, &usbHandle);
+	if (ret == 0)
+	{
+		// Download the current version info
+		ret = xum1541_get_model_version(usbHandle, &devModel, &devVersion);
+		if (ret != 0)
+		{
+			fprintf(stderr, "failed to retrieve device version\n");
+			return -1;
+		}
+
+		printf("xum1541 device, model %d firmware version %d\n", devModel, devVersion);
+		return 0;
+	}
+	else
+	{
+		fprintf(stderr, "error: no xum1541 found\n");
+		return -1;
+	}
+
 }
 
 // Set the serial so that multiple xum1541 devices can be addressed.
@@ -498,17 +530,19 @@ static void usage(void)
 		"  -v: enable verbose status messages\n\n"
 		"Commands:\n"
 		"* update xum1541-firmware.hex\n"
-		"  Updates the firmware of an xum1541 device. Optional flags:\n"
-		"    -t type: specify the device type (defaults to \"ZOOMFLOPPY\")\n"
-		"    -f: force update to given firmware. USE WITH CAUTION!\n"
+		"    Updates the firmware of an xum1541 device. Optional flags:\n"
+		"      -t type: specify the device type (defaults to \"ZOOMFLOPPY\")\n"
+		"      -f: force update to given firmware. USE WITH CAUTION!\n"
 		"* info xum1541-firmware.hex\n"
-		"  Prints info extracted from the firmware file argument.\n"
+		"    Prints info extracted from the firmware file argument.\n"
+		"* devinfo\n"
+		"    Prints info extracted from the device\n"
 		"* list (NOT YET IMPLEMENTED)\n"
-		"  Prints info about all attached xum1541 devices.\n"
+		"    Prints info about all attached xum1541 devices.\n"
 		"* set-serial 0-255 (NOT YET IMPLEMENTED)\n"
-		"  Sets the firmware serial number so multiple devices can be used.\n"
-		"  Changes the first device found so only one xum1541 device should\n"
-		"  be plugged in when running this command.\n\n"
+		"    Sets the firmware serial number so multiple devices can be used.\n"
+		"    Changes the first device found so only one xum1541 device should\n"
+		"    be plugged in when running this command.\n\n"
 	);
 	fprintf(stderr, "Supported device types (case-insensitive):\n");
 	fprintf(stderr, "  %s (default)", validDeviceTypes[DEFAULT_TYPE_IDX].commonName);
@@ -607,10 +641,17 @@ main(int argc, char *argv[])
 			goto error;
 		}
 	}
+	else if (!strcmp(*argv, "devinfo"))
+	{
+		if (PrintDeviceInfo(deviceType) !=0)
+		{
+			goto error;
+		}
+	}
 	else if (!strcmp(*argv, "set-serial"))
 	{
 		fprintf(stderr, "command not yet supported, sorry\n");
-    }
+	}
 	else
 	{
 		fprintf(stderr, "unknown command: %s\n", *argv);
