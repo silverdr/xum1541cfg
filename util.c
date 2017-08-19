@@ -154,7 +154,6 @@ static int xum1541_validate_device(struct usb_device *dev, void *arg)
 		xum1541_cleanup(&handle, "error: cannot query product name: %s\n", usb_strerror());
 		return USBDEV_IGNORE;
 	}
-
 	string[len] = '\0';
 	if (len < sizeof(xumProduct) - 1 || strstr(string, xumProduct) == NULL)
 	{
@@ -228,8 +227,8 @@ static int xum1541_enumerate(usb_dev_handle **usbHandle, DeviceValidateFn_t vali
 		for (dev = bus->devices; dev; dev = dev->next)
 		{
 			verbose_print("  device %04x:%04x at %s\n", dev->descriptor.idVendor, dev->descriptor.idProduct, dev->filename);
-			ret = validateFn(dev, arg);
 
+			ret = validateFn(dev, arg);
 			if (ret == USBDEV_IGNORE)
 			{
 				continue;
@@ -272,10 +271,12 @@ int xum1541_get_model_version(usb_dev_handle *handle, int *model, int *version)
 	{
 		return -1;
 	}
+
 	// XXX endianness?
 	revision = dev->descriptor.bcdDevice;
 	*model = revision >> 8;
-	*version = revision & 0xff;
+	*version = revision & 0x00ff;
+
 	return 0;
 }
 
